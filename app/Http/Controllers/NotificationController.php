@@ -9,7 +9,7 @@ use App\Models\ContactModel;
 use App\Models\NotificationGroupModel;
 use App\Models\Notifications;
 use App\Models\ServiceCredentialsModel;
-
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -26,10 +26,13 @@ class NotificationController extends Controller
         $notification['user_id'] = Auth::id();
 
         $notification['service_id'] = ServiceCredentialsModel::where('user_id', Auth::id())->where('service_name', $notification['service'])->select('id')->first()->id ?? null;
-        if ($notification['scheduled_date'] >= now())
-            $notification['scheduled_at'] = $notification['scheduled_date'] . ' ' . $notification['scheduled_time'];
+        $now = Carbon::now();
+        $scheduledDate = Carbon::parse($notification['scheduled_date'] . ' ' . $notification['scheduled_time']);
+
+        if ($scheduledDate->lessThan($now)) 
+        return response()->json(['status' => 'error', 'message' => 'you can\'t schedule this message in an old date !!'], 422);
         else
-            return response()->json(['status' => 'error', 'message' => 'you can\'t schedule this message in an old date !!'], 422);
+        $notification['scheduled_at'] = $notification['scheduled_date'] . ' ' . $notification['scheduled_time'];
 
 
         Notifications::create($notification);

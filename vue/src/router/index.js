@@ -130,7 +130,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !sessionStorage.getItem("TOKEN")) {
-    next({ name: "login" });
+    next({ name: "homepage" });
   } else if (sessionStorage.getItem("TOKEN") && to.meta.isGuest) {
     next({ name: "Dashboard" });
   } else if (sessionStorage.getItem("TOKEN") && to.name === "login") {

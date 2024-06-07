@@ -68,7 +68,7 @@ onMounted(() => {
   store.dispatch("getAllEvents");
 });
 
-events.value = store.state.events.data;
+events.value = computed(()=>(store.state.events.data));
 
 const loading = ref(true);
 let start = "";
@@ -86,7 +86,7 @@ let calendarOptions = ref({
   weekends: true,
   editable: true,
   displayEventTime: true,
-  durationEditable: false,
+
  selectAllow: function (selectInfo) {
   // Allow selection only for dates after today
   if (selectInfo.start <= new Date()) {
@@ -157,8 +157,9 @@ loading.value = true;
 watch(
   () => store.state.events.data,
   (newVal) => {
+    console.log("newVal",newVal);
     events.value = newVal ? Object.values(newVal) : null;
-    calendarOptions.value.events = events.value;
+
     loading.value = false;
   }
 );

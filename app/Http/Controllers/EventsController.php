@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\CleanInputs;
+
 use App\Models\NotificationGroupModel;
 use App\Models\Notifications;
 
@@ -50,8 +50,8 @@ class EventsController extends Controller
     }
     public function getEvents()
     {
-        $events1 = Notifications::whereNotNull('scheduled_at')->get();
-        $events2 = NotificationGroupModel::whereNotNull('scheduled_at')->get();
+        $events1 = Notifications::whereNotNull('scheduled_at')->where('user_id',auth()->id())->get();
+        $events2 = NotificationGroupModel::whereNotNull('scheduled_at')->where('user_id', auth()->id())->get();
 
         // Combine the collections directly
         $events = $events1->concat($events2);
@@ -95,7 +95,7 @@ class EventsController extends Controller
         if ($formFields['type'] === 'one') {
 
             $notification = Notifications::find($id);
-
+            
             return response()->json(new NotificationResource($notification));
         } else if ($formFields['type'] === 'many') {
 

@@ -25,28 +25,34 @@ class VonageRequest extends FormRequest
     {
         $userId = Auth::id();
 
-        return [
-            'service' => [
-                'required',
-                Rule::unique('user_service_credentials','service_name')->where(function ($query) use ($userId) {
-                    return $query->where('user_id', $userId);
+          return [
+        'service' => [
+            'required',
+            Rule::unique('user_service_credentials', 'service_name')
+                ->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId)
+                                 ->whereNull('deleted_at');
                 }),
-            ],
-            'service_key' => [
-                'required',
-                'string',
-                Rule::unique('user_service_credentials')->where(function ($query) use ($userId) {
-                    return $query->where('user_id', $userId);
+        ],
+        'service_key' => [
+            'required',
+            'string',
+            Rule::unique('user_service_credentials')
+                ->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId)
+                                 ->whereNull('deleted_at');
                 }),
-            ],
-            'service_token' => [
-                'required',
-                'string',
-                Rule::unique('user_service_credentials')->where(function ($query) use ($userId) {
-                    return $query->where('user_id', $userId);
+        ],
+        'service_token' => [
+            'required',
+            'string',
+            Rule::unique('user_service_credentials')
+                ->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId)
+                                 ->whereNull('deleted_at');
                 }),
-            ],
-        ];
+        ],
+    ];
     }
 
 }

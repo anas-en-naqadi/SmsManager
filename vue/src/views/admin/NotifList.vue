@@ -20,7 +20,9 @@
     <div
       class="relative overflow-x-auto h-[45rem] flex flex-col gap-20 -mt-24 sm:rounded-lg"
     >
-      <div class="flex flex-row items-center gap-[57rem] w-full -mb-6 animate-fade-in-down">
+      <div
+        class="flex flex-row items-center gap-[57rem] w-full -mb-6 animate-fade-in-down"
+      >
         <div class="2xl:w-full max-w-sm mx-auto -mb-16">
           <label for="underline_select" class="sr-only">Underline select</label>
           <select
@@ -31,8 +33,12 @@
             <option selected value="Filter by category">Filter</option>
             <option value="one">messages to one contact</option>
             <option value="many">messages to many contact</option>
-            <option value="one_scheduled">messages to one contact && scheduled</option>
-            <option value="many_scheduled">messages to many contact && scheduled</option>
+            <option value="one_scheduled">
+              messages to one contact && scheduled
+            </option>
+            <option value="many_scheduled">
+              messages to many contact && scheduled
+            </option>
           </select>
         </div>
 
@@ -107,7 +113,18 @@
               {{ notification.scheduled_at ? notification.scheduled_at : "-" }}
             </td>
             <td class="px-6 py-4">
-              {{ notification.status }}
+              <span
+                class="px-2 text-center py-0.5 text-sm font-semibold"
+                :class="[
+                  notification.status == 'sent'
+                    ? 'text-green-500'
+                    : notification.status == 'pending'
+                    ? 'text-orange-500'
+                    : 'text-red-500',
+                ]"
+              >
+                {{ notification.status }}</span
+              >
             </td>
             <td class="px-6 py-4">
               {{ notification.created_at }}
@@ -147,7 +164,7 @@ const filteredNotifications = ref({});
 store.dispatch("getAllNotifications").then((response) => {
   store.dispatch("getAllNotificationGroup").then((res) => {
     notifications.value = [...response.data, ...res.data];
-    filteredNotifications.value=[...notifications.value];
+    filteredNotifications.value = [...notifications.value];
     loading.value = false;
   });
 });
@@ -174,7 +191,6 @@ function deleteNotif(id) {
   }
 }
 function filterMessages(select) {
-
   if (select === "many")
     notifications.value = filteredNotifications.value.filter((c) =>
       Array.isArray(c.to)
@@ -183,19 +199,15 @@ function filterMessages(select) {
     notifications.value = filteredNotifications.value.filter(
       (c) => !Array.isArray(c.to)
     );
-      else if (select === "many_scheduled")
+  else if (select === "many_scheduled")
     notifications.value = filteredNotifications.value.filter(
       (c) => Array.isArray(c.to) && c.scheduled_at
     );
-        else if (select === "one_scheduled")
+  else if (select === "one_scheduled")
     notifications.value = filteredNotifications.value.filter(
       (c) => !Array.isArray(c.to) && c.scheduled_at
     );
-
-
-
   else notifications.value = filteredNotifications.value;
-
 }
 function exportCsv() {
   store

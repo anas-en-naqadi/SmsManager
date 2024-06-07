@@ -174,7 +174,7 @@ class TwilioController extends Controller
 
     public function getFromNumber()
     {
-        $phone_number = ServiceCredentialsModel::where('service_name', 'Twilio')->first()->phone_number;
+        $phone_number = ServiceCredentialsModel::where('service_name', 'Twilio')->where('user_id',auth()->id())->first()?->phone_number;
         return response()->json($phone_number);
     }
 }

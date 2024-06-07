@@ -73,7 +73,7 @@ function searchSomeThing() {
       return;
     }
     const tds = tr.querySelectorAll("td");
-    let rowVisible = false;
+    var rowVisible = false;
     for (let td of tds) {
       if (td.textContent.toLowerCase().includes(word)) {
         rowVisible = true;
@@ -86,6 +86,6 @@ function searchSomeThing() {
       tr.classList.add("hidden");
     }
   });
-if(!rowVisible) emit('udpate:var',true);
+if(!rowVisible) emit('update:var',true);
 }
 </script>

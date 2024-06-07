@@ -21,6 +21,8 @@ class DraftsController extends Controller
         if (isset($notification['scheduled_date'], $notification['scheduled_time']))
             $notification['scheduled_at'] = $notification['scheduled_date'] . ' ' . $notification['scheduled_time'];
         if (is_array($notification['to'])) $notification['to'] = json_encode($notification['to']);
+        else
+            $notification['to'] = json_encode($notification['to']);
 
         $draft = DraftsModel::create($notification);
 

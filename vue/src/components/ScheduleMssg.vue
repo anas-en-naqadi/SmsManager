@@ -53,13 +53,19 @@
               >
               <select
                 id="countries"
+                :disabled="message.status === 'sent' || message.status ==='not sent' || message.status ==='pending'"
                 @change="changeName($event)"
                 v-model="message.service"
                 class="bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 white:bg-gray-700 border-gray-300 dark:placeholder-gray-400text-black dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value="" selected>Choose your service</option>
-                <option value="Twilio">Twilio</option>
-                <option value="Vonage">Vonage</option>
+                <option
+              v-for="(service, index) in services"
+              :key="index"
+              :value="service.service_name"
+            >
+              {{ service.service_name }}
+            </option>
               </select>
             </div>
             <div class="mb-5">
@@ -147,6 +153,7 @@
                   type="date"
                   id="scheduled_date"
                   v-model="message.scheduled_date"
+                  :disabled="message.status === 'sent'"
                   class="bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 white:bg-gray-700 border-gray-300 dark:placeholder-gray-400text-black dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
               </div>
@@ -160,6 +167,7 @@
                 <input
                   type="time"
                   id="scheduled_time"
+                  :disabled="message.status === 'sent'"
                   v-model="message.scheduled_time"
                   class="bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 white:bg-gray-700 border-gray-300 dark:placeholder-gray-400text-black dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
@@ -170,6 +178,7 @@
         <div class="flex flex-row items-center justify-between">
           <!-- Submit button -->
           <button
+            v-if="message.status !== 'sent'"
             @click="event != null ? updateEvent() : addEvent()"
             type="button"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2.5 text-sm w-24 px-2.5 rounded mt-4"
@@ -187,8 +196,8 @@
             delete
           </button>
           <router-link
+            v-if="message.status !== 'sent'"
             :to="{ name: 'sendTogroup' }"
-            v-if="message.status !== 'not sent'"
             class="text-white bg-blue-500 font-bold hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 mt-4 rounded text-sm px-2.5 py-2.5 text-center white:bg-blue-600 white:hover:bg-blue-700 white:focus:ring-blue-800"
           >
             Send To Group
@@ -212,8 +221,15 @@ const message = ref({
   scheduled_date: "",
   scheduled_time: "",
 });
+const services = ref([]);
 onMounted(() => {
   store.dispatch("getAllContacts");
+   store.dispatch("getAllServices").then((res) => {
+    console.log(res);
+    if (res.status == 200) {
+      services.value = [...res.data.data];
+    }
+  });
 });
 const props = defineProps({
   isModalOpen: Boolean,
@@ -244,7 +260,7 @@ watch(
     updateMessage();
   }
 );
-let contacts = ref(computed(() => store.state.contacts.data));
+let contacts = ref(computed(() => store.state.contacts.data.data));
 
 function changeName(ev) {
   document
@@ -307,15 +323,19 @@ function updateEvent() {
     type: type,
   };
 
-  store.dispatch("updateSmsEvents", newEvent);
+  store.dispatch("updateSmsEvents", newEvent).then(res=>{
+      if (res.status === 200) store.dispatch("getAllEvents");
+  });
 
   closeModel();
 }
 function deleteEvent(id) {
   const type = Array.isArray(event.value.to) ? "many" : "one";
-  store.dispatch("deleteEvent", { type: type, id: id }).then((res) => {
-    if (res.status === 200) store.dispatch("getAllEvents");
-  });
+  if (confirm("Are you sure you delete this")) {
+    store.dispatch("deleteEvent", { type: type, id: id }).then((res) => {
+      if (res.status === 200) store.dispatch("getAllEvents");
+    });
+  }
   closeModel();
 }
 function scheduleNotif() {
