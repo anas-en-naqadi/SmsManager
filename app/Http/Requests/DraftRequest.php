@@ -23,12 +23,12 @@ class DraftRequest extends FormRequest
     {
         return [
             'to' => 'nullable',
-            'from' => 'nullable|string',
-            'body' => 'nullable|string',
-            'service' => 'nullable|string',
-            'scheduled_date' => 'nullable|string',
-            'scheduled_time' => 'nullable|string',
-            'category' => 'nullable|string'
+            'from' => 'nullable',
+            'body' => 'nullable',
+            'service' => 'nullable',
+            'scheduled_date' => 'nullable',
+            'scheduled_time' => 'nullable',
+            'category' => 'nullable'
         ];
     }
 }

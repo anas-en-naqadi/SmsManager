@@ -3,11 +3,9 @@
     <!-- The modal -->
     <div
       v-if="isModalOpen"
-      class="fixed inset-0 flex  items-center justify-center bg-gray-500 bg-opacity-75"
+      class="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75"
     >
-
       <div class="bg-white p-8 rounded shadow-lg w-[30rem]" @click.stop>
-
         <!-- Input field -->
         <div>
           <div class="flex flex-row items-center justify-between">
@@ -33,17 +31,16 @@
               </svg>
             </button>
           </div>
-    <Alert v-if="error" >
+          <Alert v-if="error">
+            <ul>
+              <li class="mt-2">* {{ error }}</li>
+            </ul>
+          </Alert>
 
-
-      <div class="mt-2"> * {{ error }}</div>
-
-    </Alert>
-
-  
           <input
             class="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 white:text-gray-400 focus:outline-none white:bg-gray-700 white:border-gray-600 white:placeholder-gray-400"
             id="file_input"
+            accept=".csv"
             type="file"
             @change="handleFileUpload"
           />
@@ -62,49 +59,57 @@
 </template>
 
 <script setup>
-import Alert from './Alert.vue';
-import { ref, reactive, defineProps } from 'vue'
-import store from '../store';
-import { useRouter } from 'vue-router';
-import {defineEmits} from 'vue';
+import Alert from "./Alert.vue";
+import { ref, reactive, defineProps } from "vue";
+import store from "../store";
+import { useRouter } from "vue-router";
+import { defineEmits } from "vue";
 const router = useRouter();
-const emit  = defineEmits(['close-modal']);
-const file = ref(null)
-const error = ref(" Pls load a csv file wish contains 5 columns")
+const emit = defineEmits(["close-modal"]);
+const file = ref(null);
+const error = ref(" Pls load a csv file wish contains 5 columns");
 const props = defineProps({
-    isModalOpen: Boolean
+  isModalOpen: Boolean,
 });
 // Define methods
 const closeModal = (event) => {
-  emit('close-modal');
-  if (event.target.closest('.close-button')) {
-    emit('close-modal');
+  emit("close-modal");
+  if (event.target.closest(".close-button")) {
+    emit("close-modal");
   } else {
-    if (!event.target.closest('.bg-white')) {
-      emit('close-modal');
+    if (!event.target.closest(".bg-white")) {
+      emit("close-modal");
     }
   }
-}
+};
 
 const handleFileUpload = (event) => {
-  file.value = event.target.files[0]
-}
-
+  file.value = event.target.files[0];
+};
 
 const sendCsv = () => {
-    const formData = new FormData();
-  formData.append('file', file.value);
-
-  store.dispatch('sendCsvFile', formData).then(res => {
-
-    if(res.status === 200){
-        isModalOpen = false;
-        router.push({
-            name:'contacts'
-        });
-    }else{
-        error.value = res.response.data.error
-    }
-  }).catch(error => console.error(error));
-}
+  const formData = new FormData();
+  formData.append("file", file.value);
+  
+  if (!file.value) {
+    error.value = "Pls choose a file !!";
+  } else {
+    store
+      .dispatch("sendCsvFile", formData)
+      .then((res) => {
+        console.log(res);
+        if (res.status === 200) {
+          emit("close-modal");
+          router.push({
+            name: "contacts",
+          });
+        } else {
+          error.value = res.response.data.error;
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+};
 </script>

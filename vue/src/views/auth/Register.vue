@@ -1,10 +1,10 @@
 <template>
-  <div class="md:overflow-hidden ">
-    <div class="sm:mx-auto sm:max-w-sm sm:max-h-sm ">
+  <div class="md:overflow-hidden">
+    <div class="sm:mx-auto sm:max-w-sm sm:max-h-sm">
       <img
         class="mx-auto h-32 w-32 -mb-10"
         src="../../../public/images/logo.png"
-        alt="Your Company"
+        alt="logo"
       />
       <h2
         class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900"
@@ -41,7 +41,7 @@
           >
           <div class="mt-2">
             <input
-            autofocus
+              autofocus
               v-model="user.name"
               id="name"
               name="fullName"

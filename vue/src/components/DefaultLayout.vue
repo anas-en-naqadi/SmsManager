@@ -447,7 +447,7 @@ export default {
       store.dispatch("logout").then((res) => {
         if (res.data.status === "success" && res.status === 200) {
           router.push({
-            name: "login",
+            name: "homepage",
           });
         }
       });

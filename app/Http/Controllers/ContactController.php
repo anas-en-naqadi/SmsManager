@@ -68,9 +68,9 @@ class ContactController extends Controller
                 $validator = Validator::make($record, [
                     'name' => 'required|string|max:255',
                     'phone_number' => 'required|string|max:255',
-                    'user_id' => 'required|exists:users,id',
+                    'user_id' => 'required',
                     'service_name' => 'required|string|max:255',
-                    'category' => 'required|string|max:255',
+                    'category' => 'string|max:255',
                     'address' => 'required|string|max:255',
                 ]);
 
@@ -101,7 +101,7 @@ class ContactController extends Controller
 
         cleanInputs($formFields);
 
-      
+
         if (!empty($formFields['category'])) {
             $existingContact = ContactModel::where('category', $formFields['category'])
                 ->where('service_name', '!=', $formFields['service_name'])

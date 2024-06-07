@@ -46,7 +46,6 @@ class SendScheduledMessages extends Command
         $messages = Notifications::where('scheduled_at', '<=', now())
             ->where('status', 'pending')
             ->where('user_id', $userId)
-
             ->get();
         $groupMessages = NotificationGroupModel::where('scheduled_at', '<=', now())
             ->where('status', 'pending')
@@ -55,23 +54,21 @@ class SendScheduledMessages extends Command
             ->get();
 
 
-        if (count($messages) !== 0) {
+        if (count($messages) > 0) {
             // Loop through the messages and send them
+
             foreach ($messages as $message) {
-                Log::info('Sending message ' . $message->id . '...');
+
                 // Replace the sendSms method with your actual sending logic
                 $this->sendSms($message);
-
-                Log::info('Message ' . $message->id . ' sent.');
             }
             $this->info('All scheduled messages sent.');
         }
-        if (count($groupMessages) !== 0) {
+        if (count($groupMessages) > 0) {
             foreach ($groupMessages as $group) {
-                Log::info('Sending message ' . $group->id . '...');
+
                 // Replace the sendSmsToGroup method with your actual sending logic
                 $this->sendSmsToGroup($group);
-                Log::info('Message ' . $group->id . ' sent.');
             }
             $this->info('All scheduled group messages sent.');
         }
@@ -93,11 +90,6 @@ class SendScheduledMessages extends Command
 
         // Create an instance of the custom notification class
         $user->notify(new smStatusNotification($notif));
-        // $notification = new smStatusNotification($notif);
-
-
-        // // Trigger the event
-        // event(new TriggerNotifications($notification));
     }
     private function sendSmsToGroup(NotificationGroupModel $group)
     {
@@ -111,19 +103,14 @@ class SendScheduledMessages extends Command
                 ->first();
 
 
-
-
-
-
-
-            if ($twilioCredentials) {
+            if (isset($twilioCredentials)) {
 
                 try {
                     // Create a Twilio client instance using the stored credentials
                     $twilio = new Client($serviceCredentials->service_key, $serviceCredentials->service_token);
 
                     // Retrieve all contacts for the user
-                    $contacts = $group['to'];
+                    $contacts = json_decode($group['to']);
 
                     // Loop through the contacts and send SMS to each contact
                     foreach ($contacts as $contact) {
@@ -140,7 +127,7 @@ class SendScheduledMessages extends Command
                             $this->saveStatus('not sent', $group);
 
                             return false;
-                        } 
+                        }
                     }
                     $this->saveStatus('sent', $group);
 
@@ -163,41 +150,43 @@ class SendScheduledMessages extends Command
                 ->where('user_id', $userId)
                 ->first();
 
-            if ($vonageCredentials) {
+            if (isset($vonageCredentials)) {
                 try {
                     // Create a Vonage client instance using the stored credentials
                     $vonage = new VonageClient(new Basic($serviceCredentials->service_key, $serviceCredentials->service_token));
 
                     // Retrieve all contacts for the user
-                    $contacts = $group['to'];
+                    $contacts = json_decode($group['to']);
 
                     // Loop through the contacts and send SMS to each contact
                     foreach ($contacts as $contact) {
                         // Send the SMS message
+                        info('group ' . json_encode($group));
                         $response = $vonage->sms()->send(
                             new VonageMessage($contact, $group['from'], $group['body'])
                         );
 
                         $message = $response->current();
 
-
                         if ($message->getStatus() !== 0) {
 
                             $this->saveStatus('not sent', $group);
 
                             return false;
-                        } 
+                        }
                     }
 
                     $this->saveStatus('sent', $group);
                     return true;
                 } catch (\Exception $e) {
                     // Handle exceptions
+
                     $this->saveStatus('not sent', $group);
 
                     return false;
                 }
             } else {
+
                 // If Vonage service credentials not found, return error response
                 $this->saveStatus('not sent', $group);
                 return false;
@@ -266,9 +255,6 @@ class SendScheduledMessages extends Command
                 if ($VonageResponse->getStatus() == 0) {
                     // // Update the status of the message to 'sent'
                     $this->saveStatus('sent', $message);
-
-
-
                     return true;
                 } else {
                     // The message failed to send

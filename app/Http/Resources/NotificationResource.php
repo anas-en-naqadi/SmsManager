@@ -22,10 +22,8 @@ class NotificationResource extends JsonResource
             'message' => $this->body,
             'created_at' => Carbon::parse($this->created_at)->format('Y-m-d H:i:s'),
             'status' => $this->status,
-                       'scheduled_at' => $this->scheduled_at !== null ? Carbon::parse($this->scheduled_at)->format('Y-m-d H:i:s') : null ,
-
-
-            'service' => $this->service->service_name
+            'scheduled_at' => $this->scheduled_at !== null ? Carbon::parse($this->scheduled_at)->format('Y-m-d H:i:s') : null,
+            'service' => $this->service?->service_name
         ];
     }
 }

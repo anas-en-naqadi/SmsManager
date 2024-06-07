@@ -1,6 +1,6 @@
 <template>
 
-    <div class="flex justify-center mt-5">
+    <div class="flex justify-center mt-5" v-if="data">
 
           <nav
             aria-label="Pagination"

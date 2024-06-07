@@ -79,11 +79,12 @@ const store = createStore({
         });
     },
 
-    getAllEvents({ commit }) {
-      return axiosClient
+    async getAllEvents({ commit }) {
+      return await axiosClient
         .get("/getSmsEvents")
         .then((res) => {
           commit("setSmsEvents", res.data.events);
+          return res ;
         })
         .catch((error) => {
           commit("setNotification", {
@@ -98,6 +99,7 @@ const store = createStore({
         .put("/updateSmsEvent", event)
         .then((res) => {
           if (res.data.status === "success") {
+
             commit("setNotification", {
               message: res.data.message,
               type: "success",
@@ -138,8 +140,8 @@ const store = createStore({
           return error;
         });
     },
-    getsmStatusNotifications({ commit }) {
-      return axiosClient
+   async getsmStatusNotifications({ commit }) {
+      return await axiosClient
         .get("/smStatusNotifications")
         .then((res) => commit("setSmStatusNotifications", res.data));
     },
@@ -179,14 +181,11 @@ const store = createStore({
       return axiosClient
         .post("/draft", message)
         .then((res) => {
-          console.log(res);
+
           return res;
         })
         .catch((error) => {
-          commit("setNotification", {
-            message: "Oops, something went wrong!",
-            type: "danger",
-          });
+
           return error;
         });
     },
@@ -238,6 +237,7 @@ const store = createStore({
             message: res.data.message,
             type: "success",
           });
+          return res ;
         })
         .catch((error) => {
           commit("setNotification", {
@@ -280,15 +280,15 @@ const store = createStore({
           return error;
         });
     },
-    getDrafts({ commit }, { url = null } = {}) {
+   async getDrafts({ commit }, { url = null } = {}) {
       url = url || "/draft";
-      return axiosClient.get(url).then((res) => res);
+      return await axiosClient.get(url).then((res) => res);
     },
-    getAllNotificationGroup({ commit }) {
-      return axiosClient.get("/getNotifGroup").then((res) => res);
+   async getAllNotificationGroup({ commit }) {
+      return await axiosClient.get("/getNotifGroup").then((res) => res);
     },
-    getTwilioPhoneNumber({ commit }) {
-      return axiosClient.get("/getTwilioNumber").then((res) => res);
+    async getTwilioPhoneNumber({ commit }) {
+      return await axiosClient.get("/getTwilioNumber").then((res) => res);
     },
     updateContact({ commit }, { contact, id }) {
       return axiosClient
@@ -315,8 +315,8 @@ const store = createStore({
           return error;
         });
     },
-    getContactDetails({ commit }, id) {
-      return axiosClient
+   async getContactDetails({ commit }, id) {
+      return await axiosClient
         .get(`/getContact/${id}`)
         .then((res) => {
           return res;
@@ -329,8 +329,8 @@ const store = createStore({
           return error;
         });
     },
-    getDraftDetails({ commit }, id) {
-      return axiosClient
+    async getDraftDetails({ commit }, id) {
+      return await axiosClient
         .get(`/draft/${id}`)
         .then((res) => {
           return res;
@@ -395,10 +395,7 @@ const store = createStore({
       return axiosClient
         .delete(`/draft/${id}`)
         .then((res) => {
-          commit("setNotification", {
-            message: res.data.message,
-            type: "success",
-          });
+         
           return res;
         })
         .catch((error) => {
@@ -457,9 +454,9 @@ const store = createStore({
           return error;
         });
     },
-    resendEmailVerification({ commit },code) {
+    resendEmailVerification({ commit }, code) {
       return axiosClient
-        .post("/resend-code",code)
+        .post("/resend-code", code)
         .then((res) => {
           return res;
         })
@@ -467,11 +464,12 @@ const store = createStore({
           return error;
         });
     },
-    getAllContacts({ commit }, { url = null } = {}) {
+    async getAllContacts({ commit }, { url = null } = {}) {
       url = url || "/allContacts";
-      return axiosClient
+      return await axiosClient
         .get(url)
         .then((res) => {
+          console.log(res);
           commit("setContacts", res.data);
           return res;
         })
@@ -509,8 +507,8 @@ const store = createStore({
           return error;
         });
     },
-    getServiceDetails({ commit }, id) {
-      return axiosClient
+    async getServiceDetails({ commit }, id) {
+      return await axiosClient
         .get(`/getService/${id}`)
         .then((res) => {
           return res;
@@ -565,27 +563,27 @@ const store = createStore({
           return error;
         });
     },
-    getAllNotifications() {
-      return axiosClient
+    async getAllNotifications() {
+      return await axiosClient
         .get("/allNotifications")
         .then((res) => res)
         .catch((error) => error);
     },
-    getAllNotificationss({ commit }, { url = null } = {}) {
+   async getAllNotificationss({ commit }, { url = null } = {}) {
       url = url || "/allNotificationss";
-      return axiosClient
+      return await axiosClient
         .get(url)
         .then((res) => res)
         .catch((error) => error);
     },
-    getAllServices() {
-      return axiosClient
+    async getAllServices() {
+      return await axiosClient
         .get("/allServices")
         .then((res) => res)
         .catch((error) => error);
     },
-    getUser({ commit }) {
-      return axiosClient
+    async getUser({ commit }) {
+      return await axiosClient
         .get("/getUser")
         .then((res) => {
           if (res.status === 200) {
@@ -598,8 +596,8 @@ const store = createStore({
           return error;
         });
     },
-    getDashboard({ commit }) {
-      return axiosClient
+    async getDashboard({ commit }) {
+      return await axiosClient
         .get("/getDashboard")
         .then((res) => {
           commit("setDashboard", res.data);

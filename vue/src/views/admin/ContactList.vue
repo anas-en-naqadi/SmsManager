@@ -56,7 +56,7 @@
           </td>
         </tr>
 
-        <tbody v-if="newContacts.length">
+        <tbody v-else>
           <tr
             v-for="(contact, index) in newContacts"
             :key="index"
@@ -81,7 +81,7 @@
               {{ contact.address }}
             </td>
             <td class="px-6 py-4">
-              {{ contact.category }}
+              {{ contact.category || "_" }}
             </td>
             <td class="px-6 py-4">
               {{ formatDate(contact.created_at) }}
@@ -104,19 +104,17 @@
               </router-link>
             </td>
           </tr>
-
+          <tr v-if="!newContacts.length">
+            <td colspan="8" class="text-center p-4">
+              <span class="text-gray-500">No Saved Contacts</span>
+            </td>
+          </tr>
         </tbody>
-           <tr v-else >
-          <td  colspan="7" class="text-center p-4">
-            <span class="text-gray-500">No Saved Contacts</span>
-          </td>
-        </tr>
-
       </table>
       <Paginator
         :data="store.state.contacts.data"
         :url="'getAllContacts'"
-      v-if="contacts"
+        v-if="newContacts.length > 10"
         @update:data="contacts = $event"
       />
     </div>
@@ -139,13 +137,14 @@ const contacts = computed(() => store.state.contacts.data.data);
 const newContacts = ref([]);
 const categories = ref([]);
 
-watch(contacts, (newValue, oldValue) => {
-  newContacts.value = [...newValue];
-  categories.value = [...new Set(newValue.map((c) => c.category))];
-});
 onMounted(() => {
   store.dispatch("getAllContacts");
 });
+watch(contacts, (newValue, oldValue) => {
+  newContacts.value = [...newValue];
+  categories.value = [...new Set(newValue.filter((c) => c.category != ""))];
+});
+
 function deleteContact(id) {
   if (confirm("Are you Sure to delete this Contact")) {
     store.dispatch("deleteContact", id).then((res) => {

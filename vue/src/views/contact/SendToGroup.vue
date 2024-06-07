@@ -45,19 +45,23 @@
           </div>
           <div class="mb-5" v-if="sendOption === 'contacts'">
             <label
-              for="countries"
+              for="services"
               class="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
               >Select your SMS service</label
             >
             <select
-              id="countries"
-              v-model="message.service"
+              id="services"
               @change="changeName($event)"
               class="bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 white:bg-gray-700 border-gray-300 dark:placeholder-gray-400text-black dark:focus:ring-blue-500 dark:focus:border-blue-500"
             >
               <option selected value="">Choose your service</option>
-              <option value="Twilio">Twilio</option>
-              <option value="Vonage">Vonage</option>
+              <option
+                v-for="(service, index) in services"
+                :key="index"
+                :value="service.service_name"
+              >
+                {{ service.service_name }}
+              </option>
             </select>
           </div>
           <div class="mb-5" v-else-if="sendOption === 'category'">
@@ -93,7 +97,7 @@
               class="w-full border bg-gray-50 rounded-md border-gray-300 px-4 py-2 focus:border-blue-500 focus:shadow-outline outline-none"
               type="text"
               v-model="message.from"
-              placeholder="second Params.."
+              placeholder="Anas Enq "
             />
           </div>
           <div class="mb-5">
@@ -232,12 +236,18 @@ import Button from "../../components/Button.vue";
 //  <Button :loading="loading" :func="sendTogroup()" :string="'send To group'" />
 onMounted(() => {
   store.dispatch("getAllContacts");
+  store.dispatch("getAllServices").then((res) => {
+    if (res.status == 200) {
+      services.value = [...res.data.data];
+    }
+  });
 });
+const services = ref([]);
 const router = useRouter();
 const route = useRoute();
 const Schedule = ref(false);
 const errors = ref({});
-const contacts = computed(() => store.state.contacts.data);
+const contacts = computed(() => store.state.contacts.data.data);
 const filteredContacts = ref({});
 const isScheduledDisabled = computed(() =>
   sendOption.value === "" ? true : false
@@ -250,13 +260,14 @@ const sendOption = ref("");
 const loading = ref(false);
 const spinner = ref(true);
 
-let draftId;
+let draftId = route.params.id || 0;
 
 const message = ref({
   service: "",
-  from: "",
+  from: null,
   body: "",
   to: null,
+  category: "",
 });
 
 if (route.params.id) {
@@ -314,23 +325,24 @@ if (route.params.id) {
     }
   }
 } else {
-  message.value.category = "";
   spinner.value = false;
-  const debouncedMessageHandler = debounce(() => {
-    if (!draftId) {
-      message.value.to = getCheckedInputs();
-      store.dispatch("storeDrafts", message.value).then((res) => {
-        if (res.status === 200) draftId = res.data.id;
-      }); // Dispatch message directly
-    } else {
-      store.dispatch("updateDraft", { id: draftId, message: message.value });
-    }
-  }, 1500);
+  //   const debouncedMessageHandler = debounce(() => {
+  //     message.value.draft = true;
+  //     if (!draftId) {
+  //       message.value.to = getCheckedInputs();
+  //       store.dispatch("storeDrafts", message.value).then((res) => {
+  //         if (res.status === 200) draftId = res.data.id;
+  //       }); // Dispatch message directly
+  //     } else {
+  //       message.value.to = getCheckedInputs();
+  //       store.dispatch("updateDraft", { id: draftId, message: message.value });
+  //     }
+  //   }, 1500);
 
-  // Watch for changes in the message object and trigger the debounced handler
-  watch(message.value, () => {
-    debouncedMessageHandler();
-  });
+  //   // Watch for changes in the message object and trigger the debounced handler
+  //   watch(message.value, () => {
+  //     debouncedMessageHandler();
+  //   });
 }
 
 function getCheckedInputs() {
@@ -362,8 +374,6 @@ function changeName(ev) {
     .querySelector("select")
     .classList.add("border-gray-600", "text-black");
 
-  message.value.service = "";
-
   if (ev.target.value === "Twilio") {
     document.getElementById("scheduled").disabled = false;
 
@@ -376,7 +386,7 @@ function changeName(ev) {
     });
   } else if (ev.target.value === "Vonage") {
     document.getElementById("scheduled").disabled = false;
-
+    message.value.service = "Vonage";
     filteredContacts.value = contacts.value.filter(
       (c) => c.service_name === "Vonage"
     );
@@ -448,7 +458,7 @@ function sendTogroup() {
 
     store.dispatch("sendByCat", message.value).then((res) => {
       if (res.status === 200) {
-        store.dispatch("deleteDraft", route.params.id).then((res) => {
+        store.dispatch("deleteDraft", draftId).then((res) => {
           router.push({
             path: "sms/notifications",
           });
@@ -469,7 +479,7 @@ function sendTogroup() {
       .then((res) => {
         console.dir(res);
         if (res.status === 200) {
-          store.dispatch("deleteDraft", route.params.id).then((res) => {
+          store.dispatch("deleteDraft", draftId).then((res) => {
             router.push({
               name: "calendar",
             });
@@ -491,7 +501,7 @@ function sendTogroup() {
       .dispatch("sendTogroup", { contacts: message.value, type: type })
       .then((res) => {
         if (res.status === 200) {
-          store.dispatch("deleteDraft", route.params.id).then((res) => {
+          store.dispatch("deleteDraft", draftId).then((res) => {
             router.push({
               name: "notif",
             });

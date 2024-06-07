@@ -27,6 +27,7 @@
             <Spinner />
           </td>
         </tr>
+
         <tr v-if="services.length === 0">
           <td colspan="7" class="text-center p-4">
             <span class="text-gray-500">No Saved SMS Services</span>
@@ -79,6 +80,7 @@
         </tbody>
       </table>
          <Paginator
+         v-if="services.length >10"
         :data="services"
         :url="'getAllServices'"
         @update:data="services= $event"

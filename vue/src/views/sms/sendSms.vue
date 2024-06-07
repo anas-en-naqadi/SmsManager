@@ -12,20 +12,24 @@
         />
       </div>
 
-      <form class="max-w-sm mx-auto w-full xl:ml-46 animate-fade-in-down" id="form">
+      <form
+        :class="{ '-mt-10': Schedule }"
+        class="max-w-sm mx-auto w-full xl:ml-46 animate-fade-in-down"
+        id="form"
+      >
         <div class="mb-5">
-        <div v-if="Object.keys(errors).length">
-              <Alert  class="-mt-16" id="alert">
-            <ul class="mt-1.5 list-disc list-inside">
-              <div v-for="(field, i) of Object.keys(errors)" :key="i">
-                <li v-for="(error, i) in errors[field]" :key="i">
-                  {{ error }}
-                </li>
-              </div>
-            </ul>
-          </Alert>
-        </div>
-          <Alert v-if="error" class="-mt-16"
+          <div v-if="Object.keys(errors).length">
+            <Alert :class="{ '-mt-10': !Schedule }">
+              <ul class="mt-1.5 list-disc list-inside">
+                <div v-for="(field, i) of Object.keys(errors)" :key="i">
+                  <li v-for="(error, i) in errors[field]" :key="i">
+                    {{ error }}
+                  </li>
+                </div>
+              </ul>
+            </Alert>
+          </div>
+          <Alert v-if="error" :class="{ '-mt-10': !Schedule }"
             ><ul>
               <li class="mt-2">* {{ error }}</li>
             </ul></Alert
@@ -41,9 +45,14 @@
             @change="changeName($event.target.value)"
             class="bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 white:bg-gray-700 border-gray-300 dark:placeholder-gray-400text-black dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
-            <option value="">Choose your service</option>
-            <option value="Twilio">Twilio</option>
-            <option value="Vonage">Vonage</option>
+            <option value="" selected>Choose your service</option>
+            <option
+              v-for="(service, index) in services"
+              :key="index"
+              :value="service.service_name"
+            >
+              {{ service.service_name }}
+            </option>
           </select>
         </div>
 
@@ -184,7 +193,7 @@ const router = useRouter();
 const Schedule = ref(false);
 const route = useRoute();
 const spinner = ref(true);
-
+const services = ref([]);
 const loading = ref(false);
 const filteredContacts = ref([]);
 const message = ref({
@@ -193,12 +202,15 @@ const message = ref({
   from: null,
   body: null,
 });
-let draftId;
+let draftId = route.params?.id;
 
 if (route.params.id) {
   store.dispatch("getDraftDetails", route.params.id).then((res) => {
-    if (res.data.draft.to)
-      filteredContacts.value = [{ phone_number: res.data.draft.to }];
+    if (res.data.draft.to) {
+      filteredContacts.value.push({ phone_number: res.data.draft.to });
+      message.value.to = res.data.draft.to;
+    }
+
     if (res.data.draft.from) message.value.from = res.data.draft.from;
     message.value.body = res.data.draft.body;
 
@@ -225,43 +237,40 @@ if (route.params.id) {
     }, 200);
   });
 } else {
-//   const debouncedMessageHandler = debounce(() => {
-//     message.value.draft = true; // Set draft property to true when debounce triggers
-//     if (!draftId) {
-//       store.dispatch("storeDrafts", message.value).then((res) => {
-//         if (res.status === 200) draftId = res.data.id;
-//       }); // Dispatch message directly
-//     } else {
-//       store.dispatch("updateDraft", { id: draftId, message: message.value });
-//     }
-//   }, 1500);
+  const debouncedMessageHandler = debounce(() => {
+    message.value.draft = true; // Set draft property to true when debounce triggers
+    if (!draftId) {
+      store.dispatch("storeDrafts", message.value).then((res) => {
+        if (res.status === 200) draftId = res.data.id;
+      }); // Dispatch message directly
+    } else {
+      store.dispatch("updateDraft", { id: draftId, message: message.value });
+    }
+  }, 1500);
 
-//   // Watch for changes in the message object and trigger the debounced handler
-//   watch(message.value, () => {
-//     debouncedMessageHandler();
-//   });
+  // Watch for changes in the message object and trigger the debounced handler
+  watch(message.value, () => {
+    debouncedMessageHandler();
+  });
 
   spinner.value = false;
 }
 
 onMounted(() => {
   store.dispatch("getAllContacts");
-
+  store.dispatch("getAllServices").then((res) => {
+    console.log(res);
+    if (res.status == 200) {
+      services.value = [...res.data.data];
+    }
+  });
   store.dispatch("getsmStatusNotifications");
 });
 watch(
   () => Schedule.value,
   (newVal) => {
-    if (newVal) {
-
-      document.querySelector("#form").classList.add("-mt-20");
-       document.querySelector("#alert").classList.remove("-mt-16");
-    } else {
-      delete message.value.scheduled_date;
-      delete message.value.scheduled_time;
-        document.querySelector("#alert").classList.add("-mt-16");
-      document.querySelector("#form").classList.remove("-mt-20");
-    }
+    delete message.value.scheduled_date;
+    delete message.value.scheduled_time;
   }
 );
 let contacts = ref(computed(() => store.state.contacts.data.data));
@@ -269,16 +278,10 @@ let contacts = ref(computed(() => store.state.contacts.data.data));
 const errors = ref({});
 
 function draft(ev) {
-  message.value.to = "";
-
   if (ev === "Twilio") {
-    filteredContacts.value = [message.value.to];
-
     document.getElementById("remember_me").disabled = false;
   } else if (ev === "Vonage") {
     document.getElementById("remember_me").disabled = false;
-
-    filteredContacts.value = [message.value.to];
   }
 }
 
@@ -322,7 +325,7 @@ function changeName(ev) {
 }
 const error = ref("");
 function sendSms() {
-    loading.value=true;
+  loading.value = true;
   if (document.querySelector("select").selectedIndex === 0) {
     document
       .querySelector("select")
@@ -331,19 +334,20 @@ function sendSms() {
     document
       .querySelector("select")
       .classList.add("border-red-500", "text-red-900");
-      store.commit("setNotification",{message:"Please choose a service !!",type:"danger"});
-      loading.value=false;
+    store.commit("setNotification", {
+      message: "Please choose a service !!",
+      type: "danger",
+    });
+    loading.value = false;
   } else {
     if (document.querySelector("input[type=checkbox]").checked) {
-
-
       store
         .dispatch("scheduleNotif", message.value)
         .then((res) => {
           if (res.status === 200 || res.response.status === "success") {
-            store.dispatch("deleteDraft", route.params.id).then((res) => {
+            store.dispatch("deleteDraft", draftId).then((res) => {
               router.push({
-                name: "notif",
+                name: "calendar",
               });
             });
           } else if (res.response.data.errors) {
@@ -351,17 +355,16 @@ function sendSms() {
           } else {
             error.value = res.response.data.message;
           }
-          loading.value=false;
+          loading.value = false;
         })
         .catch((error) => console.error(error));
     } else {
-
       if (message.value.service === "Twilio") {
         store
           .dispatch("sendWithTwilio", message.value)
           .then((res) => {
             if (res.status === 200) {
-              store.dispatch("deleteDraft", route.params.id).then((res) => {
+              store.dispatch("deleteDraft", draftId).then((res) => {
                 router.push({
                   path: "/sms/notifications",
                 });
@@ -379,7 +382,7 @@ function sendSms() {
           .dispatch("sendWithVonage", message.value)
           .then((res) => {
             if (res.status === 200) {
-              store.dispatch("deleteDraft", route.params.id).then((res) => {
+              store.dispatch("deleteDraft", draftId).then((res) => {
                 router.push({
                   name: "notif",
                 });

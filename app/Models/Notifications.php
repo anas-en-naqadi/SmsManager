@@ -22,7 +22,7 @@ class Notifications extends Model
 
     public function service()
     {
-        return $this->belongsTo(ServiceCredentialsModel::class);
+        return $this->belongsTo(ServiceCredentialsModel::class)->withTrashed();
     }
 
 }
